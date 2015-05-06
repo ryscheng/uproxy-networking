@@ -17,7 +17,7 @@
 // import regex2dfa = require('regex2dfa');
 
 import arraybuffers = require('../../../third_party/uproxy-lib/arraybuffers/arraybuffers');
-import churn_pipe_types = require('../churn-pipe/freedom-module.interface');
+import churn_pipe = require('../churn-pipe/churn-pipe');
 import churn_types = require('./churn.types');
 import handler = require('../../../third_party/uproxy-lib/handler/queue');
 import ipaddr = require('ipaddr.js');
@@ -28,7 +28,7 @@ import random = require('../../../third_party/uproxy-lib/crypto/random');
 import signals = require('../../../third_party/uproxy-lib/webrtc/signals');
 
 import ChurnSignallingMessage = churn_types.ChurnSignallingMessage;
-import ChurnPipe = churn_pipe_types.freedom_ChurnPipe;
+import ChurnPipe = churn_pipe.Pipe;
 
 var log :logging.Log = new logging.Log('churn');
 
@@ -361,12 +361,12 @@ var log :logging.Log = new logging.Log('churn');
         });
       }
 
-      var localPipe = freedom['churnPipe']();
+      var localPipe = new churn_pipe.Pipe();
       this.mirrorPipes_[key] = localPipe;
 
       // Packets received by this pipe should be obfuscated and forwarded
       // to the corresponding remote endpoint.
-      localPipe.on('message', (m:churn_pipe_types.Message) => {
+      localPipe.setCallback((m:churn_pipe.Message) => {
         publicPipe.sendTo(m.data, remoteEndpoint);
       });
 
@@ -415,7 +415,7 @@ var log :logging.Log = new logging.Log('churn');
         remoteEndpoint:net.Endpoint,
         natEndpoints:NatPair) : void => {
       log.debug('%1: configuring pipes...', this.peerName);
-      var publicPipe = freedom['churnPipe']();
+      var publicPipe = new churn_pipe.Pipe();
       // This retry is needed because the browser releases the UDP port
       // asynchronously after we call close() on the RTCPeerConnection, so
       // this.bindPublicPipe_ may initially fail, until the port is released.
@@ -451,7 +451,7 @@ var log :logging.Log = new logging.Log('churn');
             e.message);
       });
 
-      publicPipe.on('message', (m:churn_pipe_types.Message) => {
+      publicPipe.setCallback((m:churn_pipe.Message) => {
         // This is the particular local pipe associated with this sender.
         var localPipe = this.mirrorPipes_[makeEndpointKey_(m.source)];
         if (localPipe) {

@@ -12,7 +12,6 @@ taskManager.add 'base', [
   'ts:devInModuleEnv'
   'ts:devInCoreEnv'
   'browserify:echoFreedomModule'
-  'browserify:churnPipeFreedomModule'
   'browserify:simpleSocksFreedomModule'
 ]
 
@@ -286,7 +285,6 @@ module.exports = (grunt) ->
       libsForCopyPasteChurnChatChromeApp:
         Rule.copyLibs
           npmLibNames: ['freedom-for-chrome']
-          pathsFromDevBuild: ['churn-pipe']
           pathsFromThirdPartyBuild: [
             'uproxy-lib/loggingprovider'
             'uproxy-obfuscators'
@@ -297,7 +295,6 @@ module.exports = (grunt) ->
           npmLibNames: [
             'freedom-for-chrome'
           ]
-          pathsFromDevBuild: ['churn-pipe']
           pathsFromThirdPartyBuild: [
             'uproxy-lib/loggingprovider'
             'uproxy-obfuscators'
@@ -321,7 +318,7 @@ module.exports = (grunt) ->
       libsForSimpleSocksChromeApp:
         Rule.copyLibs
           npmLibNames: ['freedom-for-chrome']
-          pathsFromDevBuild: ['simple-socks', 'churn-pipe']
+          pathsFromDevBuild: ['simple-socks']
           pathsFromThirdPartyBuild: [
             'uproxy-lib/loggingprovider'
             'uproxy-obfuscators'
@@ -330,7 +327,7 @@ module.exports = (grunt) ->
       libsForSimpleSocksFirefoxApp:
         Rule.copyLibs
           npmLibNames: ['freedom-for-firefox']
-          pathsFromDevBuild: ['simple-socks', 'churn-pipe']
+          pathsFromDevBuild: ['simple-socks']
           pathsFromThirdPartyBuild: [
             'uproxy-lib/loggingprovider'
             'uproxy-obfuscators'
@@ -339,7 +336,6 @@ module.exports = (grunt) ->
       libsForSimpleChurnChatChromeApp:
         Rule.copyLibs
           npmLibNames: ['freedom-for-chrome']
-          pathsFromDevBuild: ['churn-pipe']
           pathsFromThirdPartyBuild: ['uproxy-lib/loggingprovider']
           localDestPath: 'samples/simple-socks-chromeapp/'
       libsForSimpleTurnChromeApp:
@@ -375,9 +371,6 @@ module.exports = (grunt) ->
       libsForIntegrationSocksEcho:
         Rule.copyLibs
           npmLibNames: ['freedom-for-chrome']
-          pathsFromDevBuild: [
-            'churn-pipe'
-          ]
           pathsFromThirdPartyBuild: [
             'uproxy-lib/loggingprovider'
           ]
@@ -440,15 +433,6 @@ module.exports = (grunt) ->
       poolSpec: Rule.browserifySpec 'pool/pool'
 
       # Freedom Modules
-      churnPipeFreedomModule: Rule.browserify(
-          'churn-pipe/freedom-module',
-          {
-            # Emscripten, used to compile FTE and Rabbit to JS has unused
-            # require statements for `ws` and for `path` that need to be
-            # ignored.
-            ignore: ['ws', 'path']
-            browserifyOptions: { standalone: 'browserified_exports' }
-          })
       copyPasteChurnChatFreedomModule: Rule.browserify 'samples/copypaste-churn-chat-chromeapp/freedom-module'
       copyPasteSocksFreedomModule: Rule.browserify 'samples/copypaste-socks-chromeapp/freedom-module'
       echoFreedomModule: Rule.browserify 'echo/freedom-module'

@@ -20,8 +20,10 @@ import logging = require('../../../third_party/uproxy-lib/logging/logging');
 
 import net = require('../net/net.types');
 
-import churn_pipe_types = require('./freedom-module.interface');
-import Message = churn_pipe_types.Message;
+export interface Message {
+  data: ArrayBuffer
+  source: net.Endpoint
+}
 
 var log :logging.Log = new logging.Log('churn-pipe');
 
@@ -35,7 +37,7 @@ var log :logging.Log = new logging.Log('churn-pipe');
  * message passing owing to the inelegance of receiving a response *back*
  * from a Freedom module.
  */
-class Pipe {
+export class Pipe {
 
   // Socket on which the server is listening.
   private socket_ :freedom_UdpSocket.Socket;
@@ -46,9 +48,9 @@ class Pipe {
   // Endpoint to which all messages are sent.
   private remoteEndpoint_ :net.Endpoint;
 
-  // TODO: define a type for event dispatcher in freedom-typescript-api
-  constructor (private dispatchEvent_
-      :(name:string, args:Message) => void) {
+  private callback_ :(message:Message) => void;
+
+  constructor () {
     // TODO: clean up udp sockets
     this.socket_ = freedom['core.udpsocket']();
   }
@@ -153,21 +155,27 @@ class Pipe {
     });
   }
 
+  public setCallback = (callback:(message:Message) => void)  => {
+    this.callback_ = callback;
+  }
+
   /**
    * Called when a message is received over the network from the remote side.
    * The message is de-obfuscated before the Freedom message is emitted.
    */
   private onData_ = (recvFromInfo:freedom_UdpSocket.RecvFromInfo) => {
-    var transformedBuffer = recvFromInfo.data;
-    var buffer = this.transformer_.restore(transformedBuffer);
-    this.dispatchEvent_('message', {
-      data: buffer,
-      source: {
-        address: recvFromInfo.address,
-        port: recvFromInfo.port
-      }
-    });
+    if (this.callback_) {
+      var transformedBuffer = recvFromInfo.data;
+      var buffer = this.transformer_.restore(transformedBuffer);
+      this.callback_({
+        data: buffer,
+        source: {
+          address: recvFromInfo.address,
+          port: recvFromInfo.port
+        }
+      });
+    } else {
+      log.warn('no callback set, dropping message');
+    }
   }
 }
-
-export = Pipe;
